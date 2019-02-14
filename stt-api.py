@@ -5,6 +5,7 @@ import traceback
 import io
 import uuid
 import os
+import subprocess
 
 app=Flask(__name__)
 
@@ -18,7 +19,7 @@ def run_gen(lines):
         for line in lines:
             print(line.strip(), file=f)
 
-    os.system("python {this}/../OpenNMT-py/translate.py -model {this}/../OpenNMT-py/hockey/model_step_20000.pt -src tmp_files/{fname}.input -output tmp_files/{fname}.output".format(this=thisdir, fname=filename))
+    subprocess.run("bash generate.sh {this} {fname}".format(this=thisdir, fname=filename), shell=True)
 
     gen_lines=[]
     with open("tmp_files/{fname}.output".format(fname=filename), "rt", encoding="utf-8") as f:
@@ -40,6 +41,8 @@ def req_batch():
             visitor=game_specs["vieras"]
             goal_h,goal_v=game_specs["lopputulos"]
             et=" ".join(game_specs.get("erityistiedot",["noabbr"]))
+            if not et:
+                et="noabbr"
             print(home,visitor,"lopputulos","{}-{}".format(goal_h,goal_v),et,file=buff)
             line_ids.append(game_id)
             score=[0,0]
@@ -56,12 +59,12 @@ def req_batch():
                 et=" ".join(goal.get("erityistiedot",["noabbr"]))
                 print(home,visitor,"maali","{}-{}".format(*score),lucky_guy,team,time,file=buff)
                 line_ids.append(game_id)
-                buff.seek(0)
-                generated=run_gen(buff)
-                result={}
-                for game_id,line in zip(line_ids,generated):
-                    result.setdefault(game_id,[]).append(line)
-                return json.dumps(result,indent=4)+"\n",200,{'Content-Type': 'application/json; charset=utf-8'}
+        buff.seek(0)
+        generated=run_gen(buff)
+        result={}
+        for game_id,line in zip(line_ids,generated):
+            result.setdefault(game_id,[]).append(line)
+        return json.dumps(result,indent=4)+"\n",200,{'Content-Type': 'application/json; charset=utf-8'}
     except:
         return traceback.format_exc(),400
 
