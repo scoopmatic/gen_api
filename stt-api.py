@@ -4,6 +4,7 @@ import json
 import traceback
 import io
 import uuid
+import os
 
 app=Flask(__name__)
 
@@ -15,9 +16,9 @@ def run_gen(lines):
     filename = uuid.uuid4().hex
     with open("tmp_files/{fname}.input".format(fname=filename), "wt", encoding="utf-8") as f:
         for line in lines:
-            print(line, file=f)
+            print(line.strip(), file=f)
 
-    os.system("python {this}/../OpenNMT-py/translate.py -model {this}/../OpenNMT-py/hockey/model_step_2500.pt -src tmp_files/{fname}.input -output tmp_files/{fname}.output".format(this=thisdir, fname=filename))
+    os.system("python {this}/../OpenNMT-py/translate.py -model {this}/../OpenNMT-py/hockey/model_step_20000.pt -src tmp_files/{fname}.input -output tmp_files/{fname}.output".format(this=thisdir, fname=filename))
 
     gen_lines=[]
     with open("tmp_files/{fname}.output".format(fname=filename), "rt", encoding="utf-8") as f:
