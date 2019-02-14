@@ -3,14 +3,31 @@ from flask import request, Flask, make_response
 import json
 import traceback
 import io
+import uuid
+import os
+import subprocess
 
 app=Flask(__name__)
 
 def run_gen(lines):
     """This should return the lines translated"""
     #...do the gen here
+    thisdir=os.path.dirname(os.path.realpath(__file__))
+
+    filename = uuid.uuid4().hex
+    with open("tmp_files/{fname}.input".format(fname=filename), "wt", encoding="utf-8") as f:
+        for line in lines:
+            print(line.strip(), file=f)
+
+    subprocess.run("bash generate.sh {this} {fname}".format(this=thisdir, fname=filename), shell=True)
+
+    gen_lines=[]
+    with open("tmp_files/{fname}.output".format(fname=filename), "rt", encoding="utf-8") as f:
+        for line in f:
+            gen_lines.append(line.strip())
+
     #return a string with the result
-    return lines
+    return gen_lines
 
 @app.route("/api-v1", methods=["POST"])
 def req_batch():
@@ -24,6 +41,8 @@ def req_batch():
             visitor=game_specs["vieras"]
             goal_h,goal_v=game_specs["lopputulos"]
             et=" ".join(game_specs.get("erityistiedot",["noabbr"]))
+            if not et:
+                et="noabbr"
             print(home,visitor,"lopputulos","{}-{}".format(goal_h,goal_v),et,file=buff)
             line_ids.append(game_id)
             score=[0,0]
@@ -40,11 +59,12 @@ def req_batch():
                 et=" ".join(goal.get("erityistiedot",["noabbr"]))
                 print(home,visitor,"maali","{}-{}".format(*score),lucky_guy,team,time,file=buff)
                 line_ids.append(game_id)
-                generated=run_gen(buff.getvalue())
-                result={}
-                for game_id,line in zip(line_ids,generated.rstrip("\n").split("\n")):
-                    result.setdefault(game_id,[]).append(line)
-                return json.dumps(result,indent=4)+"\n",200,{'Content-Type': 'application/json; charset=utf-8'}
+        buff.seek(0)
+        generated=run_gen(buff)
+        result={}
+        for game_id,line in zip(line_ids,generated):
+            result.setdefault(game_id,[]).append(line)
+        return json.dumps(result,indent=4)+"\n",200,{'Content-Type': 'application/json; charset=utf-8'}
     except:
         return traceback.format_exc(),400
 
