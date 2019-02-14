@@ -1,5 +1,5 @@
 import flask
-from flask import request, Flask
+from flask import request, Flask, make_response
 import json
 import traceback
 import io
@@ -60,10 +60,10 @@ def req_batch():
                 result={}
                 for game_id,line in zip(line_ids,generated):
                     result.setdefault(game_id,[]).append(line)
-                return json.dumps(result,indent=4)+"\n"
+                return json.dumps(result,indent=4)+"\n",200,{'Content-Type': 'application/json; charset=utf-8'}
     except:
         return traceback.format_exc(),400
-    return buff.getvalue()
+
 
             
 
