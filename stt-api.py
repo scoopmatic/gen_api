@@ -43,7 +43,7 @@ def req_batch():
             et=" ".join(game_specs.get("erityistiedot",["noabbr"]))
             if not et:
                 et="noabbr"
-            print(home,visitor,"lopputulos","{}-{}".format(goal_h,goal_v),et,file=buff)
+            print(home,visitor,"lopputulos","{} – {}".format(goal_h,goal_v),et,file=buff)
             line_ids.append(game_id)
             score=[0,0]
             for goal in game_specs.get("maalit",[]):
@@ -57,7 +57,9 @@ def req_batch():
                     score[1]+=1
                 time=goal.get("aika","")
                 et=" ".join(goal.get("erityistiedot",["noabbr"]))
-                print(home,visitor,"maali","{}-{}".format(*score),lucky_guy,team,time,file=buff)
+                if not et:
+                    et="noabbr"
+                print(home,visitor,"maali","{} – {}".format(*score),et,lucky_guy,team,time,file=buff)
                 line_ids.append(game_id)
         buff.seek(0)
         generated=run_gen(buff)
