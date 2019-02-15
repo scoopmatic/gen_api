@@ -1,2 +1,1 @@
-curl --header "Content-Type: application/json"   --request POST --data @example.json http://localhost:5000/api-v1
-
+curl --header "Content-Type: application/json" --request POST --data @example.json http://epsilon-it.utu.fi/stt-api/api-v1
