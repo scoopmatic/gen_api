@@ -10,17 +10,49 @@ for key, value in input.items():
 		value["erityistiedot"] = ["noabbr"]
 
 	# Synthesize final result event
-	events = ["event_idx": "E1",
+	events = [{"event_idx": "E1",
         	  "Type": "Lopputulos",
        		  "Home": value['koti'],
 	 	  "Guest": value['vieras'],
 	          "Score": "%d–%d" % tuple(value["lopputulos"]),
         	  "Periods": '('+', '.join(["%d–%d" % tuple(period) for period in value["erät"]])+')',  #"(1–0, 1–1, 0–1, 1–0)",
 	          "Abbreviations": ','.join(value["erityistiedot"]),
-        	  "Time": 0.0]
+        	  "Time": 0.0}]
 
 	# Syntesize other events
-	# TODO: build goal events, penalty events, save events; sort event list by time (saves last)
+	game_events = []
+	scores = {'koti': 0, 'vieras': 0}
+	if "erityistiedot" not in goals:
+		goals["erityistiedot"] = ["noabbr"]
+
+	for goal in value["maalit"]:
+		scores[goal["joukkue"]] += 1
+		game_events.append({'Type': 'Maali', 
+			      'Score': "%(koti)d–%(vieras)d" % scores, 
+                              'Player': goal["tekijä"],
+                              'Assist': ', '.join(goal["syöttäjät"]),
+                              'Team': value[goal["joukkue"]],
+                              'Abbreviations': ','.join(goal["erityistiedot"]),
+                              'Time': float(goal["aika"].replace(':', '.')),
+                              'Player_fullname': goal["tekijä"],
+                              'Assist_fullname': ', '.join(goal["syöttäjät"])})
+
+	for penalty in value["jäähyt"]:
+		#  "syy": "koukkaaminen" <-- field missing in training data
+		game_events.append({'Type': 'Jäähy',
+			            'Player': penalty["pelaaja"],
+			            "Team": value[penalty["joukkue"]],
+			            "Minutes": penalty["minuutit"],
+			            "Time": float(penalty["aika"].replace(':','.')),
+			            "Player_fullname": penalty["pelaaja"]})
+
+
+	game_events.sort(key=lambda x: x["Time"])
+	for i, event in enumerate(game_events, 2):
+		event['event_idx'] = 'E%d' % i
+		events.append(event)
+	
+	# TODO: saves?
 
 	output[game] = {'events': events}
 
