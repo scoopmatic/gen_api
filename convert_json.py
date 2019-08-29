@@ -8,6 +8,8 @@ output = {}
 for key, value in input.items():
 	if "erityistiedot" not in value:
 		value["erityistiedot"] = ["noabbr"]
+	if "erät" not in value:
+		value["erät"] = [value['lopputulos']]
 
 	# Synthesize final result event
 	events = [{"event_idx": "E1",
@@ -22,11 +24,11 @@ for key, value in input.items():
 	# Syntesize other events
 	game_events = []
 	scores = {'koti': 0, 'vieras': 0}
-	if "erityistiedot" not in goals:
-		goals["erityistiedot"] = ["noabbr"]
 
 	for goal in value["maalit"]:
 		scores[goal["joukkue"]] += 1
+		if "erityistiedot" not in goal:
+			goal["erityistiedot"] = ["noabbr"]
 		game_events.append({'Type': 'Maali', 
 			      'Score': "%(koti)d–%(vieras)d" % scores, 
                               'Player': goal["tekijä"],
@@ -52,9 +54,9 @@ for key, value in input.items():
 		event['event_idx'] = 'E%d' % i
 		events.append(event)
 	
-	# TODO: saves?
+	# TODO: support for saves event; define API format
 
-	output[game] = {'events': events}
+	output[key] = {'events': events}
 
 
-json.dump(output, open(sys.argv[2], 'w'))
+json.dump(output, open(sys.argv[2], 'w'), indent=2)
