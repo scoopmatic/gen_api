@@ -19,7 +19,8 @@ for key, value in input.items():
 	          "Score": "%d–%d" % tuple(value["lopputulos"]),
         	  "Periods": '('+', '.join(["%d–%d" % tuple(period) for period in value["erät"]])+')',  #"(1–0, 1–1, 0–1, 1–0)",
 	          "Abbreviations": ','.join(value["erityistiedot"]),
-        	  "Time": 0.0}]
+        	  "Time": 0.0,
+		  "text": "--"}]
 
 	# Syntesize other events
 	game_events = []
@@ -37,7 +38,8 @@ for key, value in input.items():
                               'Abbreviations': ','.join(goal["erityistiedot"]),
                               'Time': float(goal["aika"].replace(':', '.')),
                               'Player_fullname': goal["tekijä"],
-                              'Assist_fullname': ', '.join(goal["syöttäjät"])})
+                              'Assist_fullname': ', '.join(goal["syöttäjät"]),
+			      'text': '--'})
 
 	for penalty in value["jäähyt"]:
 		#  "syy": "koukkaaminen" <-- field missing in training data
@@ -46,7 +48,8 @@ for key, value in input.items():
 			            "Team": value[penalty["joukkue"]],
 			            "Minutes": penalty["minuutit"],
 			            "Time": float(penalty["aika"].replace(':','.')),
-			            "Player_fullname": penalty["pelaaja"]})
+			            "Player_fullname": penalty["pelaaja"],
+				    "text": '--'})
 
 
 	game_events.sort(key=lambda x: x["Time"])
