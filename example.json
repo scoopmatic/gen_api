@@ -1,7 +1,7 @@
 {
     "peli_1": {"koti": "TPS", "vieras": "Pelicans", "lopputulos": [3,1], "erät": [[3,0], [0,1], [0,0]], "erityistiedot": ["vl"], "maalit": [{"id": 1, "tekijä": "Jere Sallinen", "syöttäjät": ["Niko Nieminen", "Antti Kangasniemi"], "joukkue": "koti", "aika": "3:15", "erityistiedot": []}], "jäähyt": [{"id": 1, "pelaaja": "Jere Sallinen", "joukkue": "koti", "minuutit": 2, "aika": "5:11", "syy": "koukkaaminen"}]},
 
-    "peli_2": {"koti": "KooKoo", "vieras": "Tappara", "lopputulos": [4,2], "maalit": [{"id": 1, "tekijä": "Jere Sallinen", "syöttäjät": ["Niko Nieminen", "Antti Kangasniemi"], "joukkue": "koti", "aika": "3:15", "erityistiedot": ["av"]},{"id": 2, "tekijä": "Jeppe Sullinen", "syöttäjät": ["Niko Nieminen", "Antti Kangasniemi"], "joukkue": "vieras", "aika": "13:55", "erityistiedot": ["yv"]}], "jäähyt": [{"id": 1, "pelaaja": "Jere Sallinen", "joukkue": "koti", "minuutit": 2, "aika": "5:11", "syy": "koukkaaminen"}]}
+    "peli_2": {"koti": "KooKoo", "vieras": "Tappara", "lopputulos": [4,2], "erät": [[1,0], [2,2], [1,0]], "maalit": [{"id": 1, "tekijä": "Jere Sallinen", "syöttäjät": ["Niko Nieminen", "Antti Kangasniemi"], "joukkue": "koti", "aika": "3:15", "erityistiedot": ["av"]},{"id": 2, "tekijä": "Jeppe Sullinen", "syöttäjät": ["Niko Nieminen", "Antti Kangasniemi"], "joukkue": "vieras", "aika": "13:55", "erityistiedot": ["yv"]}], "jäähyt": [{"id": 1, "pelaaja": "Jere Sallinen", "joukkue": "koti", "minuutit": 2, "aika": "5:11", "syy": "koukkaaminen"}]}
 
 
 
