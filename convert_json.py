@@ -2,7 +2,7 @@ import json
 import sys
 
 
-input = json.load(open(sys.argv[1])) # Format as in example.json
+input = json.load(sys.stdin) # Format as in example.json
 output = {}
 
 for key, value in input.items():
@@ -30,8 +30,8 @@ for key, value in input.items():
 		scores[goal["joukkue"]] += 1
 		if "erityistiedot" not in goal:
 			goal["erityistiedot"] = ["noabbr"]
-		game_events.append({'Type': 'Maali', 
-			      'Score': "%(koti)d–%(vieras)d" % scores, 
+		game_events.append({'Type': 'Maali',
+			      'Score': "%(koti)d–%(vieras)d" % scores,
                               'Player': goal["tekijä"],
                               'Assist': ', '.join(goal["syöttäjät"]),
                               'Team': value[goal["joukkue"]],
@@ -56,10 +56,10 @@ for key, value in input.items():
 	for i, event in enumerate(game_events, 2):
 		event['event_idx'] = 'E%d' % i
 		events.append(event)
-	
+
 	# TODO: support for saves event; define API format
 
 	output[key] = {'events': events}
 
 
-json.dump(output, open(sys.argv[2], 'w'), indent=2)
+json.dump(output, open(sys.argv[1], 'w'), indent=2)

@@ -6,7 +6,7 @@ SESSION=$(head /dev/urandom |md5sum| cut -b-4)
 mkdir $TMP 2> /dev/null
 mkdir $TMP/$SESSION
 
-python convert_json.py example.json $TMP/$SESSION/events.json
+cat - |python convert_json.py $TMP/$SESSION/events.json
 
 cd ../game-report-generator
 python create_training_data_orig.py $TMP/$SESSION/events.json /dev/null /dev/null $TMP/$SESSION/events_for_selection.jsonl $TMP/$SESSION/events_ext.json 1> /dev/null
