@@ -9,6 +9,7 @@ import subprocess
 import re
 import copy
 
+
 app=Flask(__name__)
 
 
@@ -199,39 +200,47 @@ def req_batch():
         assert isinstance(json_data,dict)
         buff=io.StringIO()
         line_ids=[]
-        event_json = {}
+        event_json = []
         convert_name = (lambda s: '-'.join([p.capitalize() for p in s.split('-')]) if s.isupper() else s)
         for game_id,game_specs in json_data.items():
-            event_json[game_id] = []
+            #event_json[game_id] = []
             home=game_specs["koti"]
             visitor=game_specs["vieras"]
             total_score=game_specs["lopputulos"]
             formatted_input=format_results_line(game_specs)
+            event_json.append({'tyyppi': 'lopputulos'})
             for input_ in formatted_input:
                 print(input_,file=buff)
-                event_json[game_id].append({'tyyppi': 'lopputulos'})
                 line_ids.append(game_id)
             current_score=[0,0]
             for goal_specs in game_specs.get("maalit",[]):
                 goal_specs['pelaaja'] = convert_name(goal_specs['tekijä'])
                 goal_specs['syöttäjät'] = [convert_name(n) for n in goal_specs['syöttäjät']]
                 formatted_input, current_score = format_goal_line(home, visitor, total_score, current_score, goal_specs)
+                event_json.append({'tyyppi': 'maali', 'id': goal_specs['id']})
                 for input_ in formatted_input:
                     print(input_,file=buff)
-                    event_json[game_id].append({'tyyppi': 'maali'})
                     line_ids.append(game_id)
         buff.seek(0)
         generated=run_gen(buff)
         result={}
         GENERATIONS_PER_EVENT = 3
+
         for gen_i, (game_id, line) in enumerate(zip(line_ids,generated)):
             detokenized = detokenize(line)
             event_i = gen_i//GENERATIONS_PER_EVENT
-            meta = copy.copy(event_json[game_id][event_i])
+            meta = copy.copy(event_json[event_i])
+            if 'id' not in meta:
+                meta['id'] = None
+                sel_id = 0
+            else:
+                sel_id = meta['id']-1
+
+            meta['valittu'] = sorted([(int(x['idx'][1:]), x['sel']) for x in selection[game_id] if x['type'].lower() == meta['tyyppi']])[sel_id][1]
+
             meta['teksti'] = detokenized
             meta['versio'] = gen_i % GENERATIONS_PER_EVENT
-            meta['valittu'] = 1 #TODO: integrate selection
             result.setdefault(game_id,[]).append(meta)
-        return json.dumps(results, indent=4)+"\n",200,{'Content-Type': 'application/json; charset=utf-8'}
+        return json.dumps(result, indent=4)+"\n",200,{'Content-Type': 'application/json; charset=utf-8'}
     except:
         return traceback.format_exc(),400
