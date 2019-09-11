@@ -22,6 +22,6 @@ python insert_selection.py $TMP/$SESSION/events.json $TMP/$SESSION/events_for_se
 # Predicted event selection marked in events_selected.json
 
 # Save stripped event selection JSON data into output.json
-echo "import json; d=json.load(open('$TMP/$SESSION/events_selected.json')); print(json.dumps({g: [e['selected'] for e in d[g]['events'] ] for g in d}, open('output.json','w'), indent=2))" | python3
-
+#echo "import json; d=json.load(open('$TMP/$SESSION/events_selected.json')); print(json.dumps({g: [e['selected'] for e in d[g]['events'] ] for g in d}, open('output.json','w'), indent=2))" | python3
+echo "import json; d=json.load(open('$TMP/$SESSION/events_selected.json')); print(json.dumps({g: [{'type': e['Type'], 'idx': e['event_idx'], 'sel': e['selected']} for e in d[g]['events'] ] for g in d}, open('output.json','w'), indent=2))" | python3
 rm -rf $TMP/$SESSION
