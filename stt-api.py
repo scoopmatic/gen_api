@@ -7,6 +7,7 @@ import uuid
 import os
 import subprocess
 import re
+import copy
 
 app=Flask(__name__)
 
@@ -23,7 +24,8 @@ def event_selector(json_data):
     completed_process = subprocess.run("cat tmp_files/{json_file}.json | bash selector_pipeline.sh".format(json_file=filename), shell=True, stdout=subprocess.PIPE)
 
     json_text = completed_process.stdout.decode("utf-8")
-    print("my out:", json_text)
+    #print("my out:", json_text)
+    return json_text
 
 
 def run_gen(lines):
@@ -56,7 +58,7 @@ def detokenize(text):
     text = re.sub(r"([0-9])\s-\s([a-zA-ZÅÄÖåäö\)])", r"\1 -\2", text) # detokenize times '3 - 5 -osuman'
     text = re.sub(r"([a-zA-ZåäöÅÄÖ])\s-\s([a-zA-ZÅÄÖåäö])", r"\1-\2", text) # Juha - Pekka H.
     text = text.replace(" .", ".")
-    
+
     text = " ".join( text.split() )
 
     return text
@@ -180,7 +182,7 @@ def format_goal_line(home, visitor, total_score, current_score, goal_specs):
     # <goaltype> {goal_type} </goaltype> <abbrevs> yv </abbrevs>"
 
     # approx_time, period, goaltype
-    
+
 
     return formatted_lines, current_score
 
@@ -191,37 +193,45 @@ def req_batch():
     json_data=request.json
     try:
 
-        event_selector(json_data)
+        selection = json.loads(event_selector(json_data))
         print(json_data)
 
         assert isinstance(json_data,dict)
         buff=io.StringIO()
         line_ids=[]
+        event_json = {}
+        convert_name = (lambda s: '-'.join([p.capitalize() for p in s.split('-')]) if s.isupper() else s)
         for game_id,game_specs in json_data.items():
+            event_json[game_id] = []
             home=game_specs["koti"]
             visitor=game_specs["vieras"]
             total_score=game_specs["lopputulos"]
             formatted_input=format_results_line(game_specs)
             for input_ in formatted_input:
                 print(input_,file=buff)
+                event_json[game_id].append({'tyyppi': 'lopputulos'})
                 line_ids.append(game_id)
             current_score=[0,0]
             for goal_specs in game_specs.get("maalit",[]):
-
+                goal_specs['pelaaja'] = convert_name(goal_specs['pelaaja'])
+                goal_specs['syöttäjät'] = [convert_name(n) for n in goal_specs['syöttäjät']]
                 formatted_input, current_score = format_goal_line(home, visitor, total_score, current_score, goal_specs)
                 for input_ in formatted_input:
                     print(input_,file=buff)
+                    event_json[game_id].append({'tyyppi': 'maali'})
                     line_ids.append(game_id)
         buff.seek(0)
         generated=run_gen(buff)
         result={}
-        for game_id,line in zip(line_ids,generated):
+        GENERATIONS_PER_EVENT = 3
+        for gen_i, (game_id, line) in enumerate(zip(line_ids,generated)):
             detokenized = detokenize(line)
-            result.setdefault(game_id,[]).append(detokenized)
-        return json.dumps(result,indent=4)+"\n",200,{'Content-Type': 'application/json; charset=utf-8'}
+            event_i = gen_i//GENERATIONS_PER_EVENT
+            meta = copy.copy(event_json[game_id][event_i])
+            meta['teksti'] = detokenized
+            meta['versio'] = gen_i % GENERATIONS_PER_EVENT
+            meta['valittu'] = 1 #TODO: integrate selection
+            result.setdefault(game_id,[]).append(meta)
+        return json.dumps(results, indent=4)+"\n",200,{'Content-Type': 'application/json; charset=utf-8'}
     except:
         return traceback.format_exc(),400
-
-
-            
-
