@@ -1,5 +1,7 @@
 # Pipeline for launching event selection model
 
+source ../venv-stt/bin/activate
+
 TMP=/tmp/gen_api
 SESSION=$(head /dev/urandom |md5sum| cut -b-4)
 

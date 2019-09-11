@@ -10,6 +10,22 @@ import re
 
 app=Flask(__name__)
 
+
+def event_selector(json_data):
+
+    #...do the gen here
+    thisdir=os.path.dirname(os.path.realpath(__file__))
+
+    filename = uuid.uuid4().hex
+    with open("tmp_files/{fname}.json".format(fname=filename), "wt", encoding="utf-8") as f:
+        json.dump(json_data, f)
+
+    completed_process = subprocess.run("cat tmp_files/{json_file}.json | bash selector_pipeline.sh".format(json_file=filename), shell=True, stdout=subprocess.PIPE)
+
+    json_text = completed_process.stdout.decode("utf-8")
+    print("my out:", json_text)
+
+
 def run_gen(lines):
     """This should return the lines translated"""
     #...do the gen here
@@ -174,6 +190,10 @@ def format_goal_line(home, visitor, total_score, current_score, goal_specs):
 def req_batch():
     json_data=request.json
     try:
+
+        event_selector(json_data)
+        print(json_data)
+
         assert isinstance(json_data,dict)
         buff=io.StringIO()
         line_ids=[]
