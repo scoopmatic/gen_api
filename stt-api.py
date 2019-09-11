@@ -213,7 +213,7 @@ def req_batch():
                 line_ids.append(game_id)
             current_score=[0,0]
             for goal_specs in game_specs.get("maalit",[]):
-                goal_specs['pelaaja'] = convert_name(goal_specs['pelaaja'])
+                goal_specs['pelaaja'] = convert_name(goal_specs['tekijä'])
                 goal_specs['syöttäjät'] = [convert_name(n) for n in goal_specs['syöttäjät']]
                 formatted_input, current_score = format_goal_line(home, visitor, total_score, current_score, goal_specs)
                 for input_ in formatted_input:
