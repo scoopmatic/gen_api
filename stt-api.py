@@ -249,7 +249,7 @@ def req_batch():
         buff=io.StringIO()
         line_ids=[]
         event_json = []
-        
+
         for game_id,game_specs in json_data.items():
             #event_json[game_id] = []
             home=game_specs["koti"]
@@ -286,13 +286,14 @@ def req_batch():
             detokenized = detokenize(line)
             event_i = gen_i//GENERATIONS_PER_EVENT
             meta = copy.copy(event_json[event_i])
+
             if 'id' not in meta:
                 meta['id'] = None
-                sel_id = 0
+                index = 0
             else:
-                sel_id = meta['id']-1
+                index = sorted([ev['id'] for ev in event_json if ev['tyyppi'] == meta['tyyppi']]).index(meta['id'])
 
-            meta['valittu'] = sorted([(int(x['idx'][1:]), x['sel']) for x in selection[game_id] if x['type'].lower() == meta['tyyppi']])[sel_id][1]
+            meta['valittu'] = sorted([(int(x['idx'][1:]), x['sel']) for x in selection[game_id] if x['type'].lower() == meta['tyyppi']])[index][1]
 
             meta['teksti'] = detokenized
             meta['versio'] = gen_i % GENERATIONS_PER_EVENT
