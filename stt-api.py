@@ -244,7 +244,7 @@ def normalize_input(json):
 def req_batch():
     json_data=request.json
     json_data = normalize_input(json_data)
-   
+
     try:
 
         selection = json.loads(event_selector(json_data))
@@ -295,10 +295,10 @@ def req_batch():
                 meta['id'] = None
                 index = 0
             else:
-                index = sorted([ev['id'] for ev in event_json if ev['tyyppi'] == meta['tyyppi']]).index(meta['id'])
+                input_ids = sorted([ev['id'] for i,ev in enumerate(event_json) if ev['tyyppi'] == meta['tyyppi'] and line_ids[i*GENERATIONS_PER_EVENT] == game_id])
+                index = input_ids.index(int(meta['id']))
 
             meta['valittu'] = sorted([(int(x['idx'][1:]), x['sel']) for x in selection[game_id] if x['type'].lower() == meta['tyyppi']])[index][1]
-
             meta['teksti'] = detokenized
             meta['versio'] = gen_i % GENERATIONS_PER_EVENT
             result.setdefault(game_id,[]).append(meta)
