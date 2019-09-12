@@ -76,7 +76,7 @@ def format_results_line(game_specs):
     if not et:
         et=""
     else:
-        et=" <abbrevs> {et} </abbrevs>".format(et=et.lower())
+        et=" <abbrevs> {et} </abbrevs>".format(et=et)
     print(game_specs)
     period_scores = ["{} – {}".format(h,v) for h,v in game_specs["erät"]]
     period_scores = "( " + " , ".join(period_scores) + " )"
@@ -164,7 +164,6 @@ def format_goal_line(home, visitor, total_score, current_score, goal_specs):
     else:
         et = " <abbrevs> {abbr} </abbrevs>".format(abbr=et)
 
-    # TODO
     goal_type = goaltype(prev_score, "{}–{}".format(current_score[0], current_score[1]), total_score)
 
     approx_time = str(int( ( ( float(exact_time)%20 ) //5 ) +1 )) +"/4"
@@ -222,24 +221,30 @@ def normalize_input(json):
 
     convert_name = (lambda s: '-'.join([p.capitalize() for p in s.split('-')]) if s.isupper() else s)
 
-    if "maalit" in json:
-        for i,goal in enumerate(json["maalit"]):
-            json["maalit"][i]['tekijä'] = ' '.join([convert_name(n) for n in goal['tekijä'].split(' ')])
-            json["maalit"][i]['syöttäjät'] = [' '.join([convert_name(np) for np in n.split(' ')]) for n in goal['syöttäjät']]
-            json["maalit"][i]["aika"] = add_zeros(goal["aika"])
-    if "jäähyt" in json:
-        for i, penalty in enumerate(json["jäähyt"]):
-            json["jäähyt"][i]['pelaaja'] = ' '.join([convert_name(n) for n in penalty['pelaaja'].split(' ')])
-            json["jäähyt"][i]["aika"] = add_zeros(penalty["aika"])
+    for game_id,game_specs in json.items():
+
+        if "erityistiedot" in json[game_id]:
+            json[game_id]["erityistiedot"] = [ e.lower() for e in json[game_id]["erityistiedot"]]
+
+        if "maalit" in json[game_id]:
+            for i,goal in enumerate(json[game_id]["maalit"]):
+                json[game_id]["maalit"][i]['tekijä'] = ' '.join([convert_name(n) for n in goal['tekijä'].split(' ')])
+                json[game_id]["maalit"][i]['syöttäjät'] = [' '.join([convert_name(np) for np in n.split(' ')]) for n in goal['syöttäjät']]
+                json[game_id]["maalit"][i]["aika"] = add_zeros(goal["aika"])
+                if "erityistiedot" in goal:
+                    json[game_id]["maalit"][i]["erityistiedot"] = [ e.lower() for e in goal["erityistiedot"]]
+        if "jäähyt" in json[game_id]:
+            for i, penalty in enumerate(json[game_id]["jäähyt"]):
+                json[game_id]["jäähyt"][i]['pelaaja'] = ' '.join([convert_name(n) for n in penalty['pelaaja'].split(' ')])
+                json[game_id]["jäähyt"][i]["aika"] = add_zeros(penalty["aika"])
 
     return json
 
 @app.route("/api-v1", methods=["POST"])
 def req_batch():
     json_data=request.json
-    print("input json:", json_data)
     json_data = normalize_input(json_data)
-    print("normalized json:", json_data)
+   
     try:
 
         selection = json.loads(event_selector(json_data))
@@ -270,7 +275,6 @@ def req_batch():
 
             for penalty_specs in game_specs.get("jäähyt",[]):
                 formatted_input = format_penalty_line(home, visitor, penalty_specs)
-                print(formatted_input)
                 event_json.append({'tyyppi': 'jäähy', 'id': penalty_specs['id']})
                 for input_ in formatted_input:
                     print(input_,file=buff)
