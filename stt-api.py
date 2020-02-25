@@ -8,7 +8,7 @@ import os
 import subprocess
 import re
 import copy
-
+import hashlib
 
 app=Flask(__name__)
 
@@ -240,14 +240,45 @@ def normalize_input(json):
 
     return json
 
+
+def cached_name(game_specs):
+    game_specs=json.dumps(game_specs,sort_keys=True,ensure_ascii=True)
+    hashed=hashlib.sha384(game_specs.encode("ASCII")).hexdigest()+".json"
+    return os.path.join("cache",hashed)
+
+
+def save_to_cache(all_games_in,all_games_out):
+    for game_id,text_data in all_games_out.items():
+        game_specs=all_games_in[game_id]
+        try:
+            with open(cached_name(game_specs),"wt") as f:
+                json.dump(text_data,f)
+        except:
+            traceback.print_exc()
+            continue #I guess no can do
+
+def load_from_cache(game_specs):
+    fname=cached_name(game_specs)
+    if os.path.exists(fname): #in cache
+        with open(fname,"rt") as f:
+            try:
+                return json.load(f)
+            except:
+                #maybe being written currently?
+                return None
+    else:
+        return None #not in cache
+
+
 @app.route("/api-v1", methods=["POST"])
 def req_batch():
     json_data=request.json
     json_data = normalize_input(json_data)
 
+    json_data_notcached={} #this will be the data of stuff that needs to be generated
     try:
 
-        selection = json.loads(event_selector(json_data))
+
         #print(json_data)
 
         assert isinstance(json_data,dict)
@@ -255,7 +286,13 @@ def req_batch():
         line_ids=[]
         event_json = []
 
+        results_from_cache={} 
         for game_id,game_specs in json_data.items():
+            cached=load_from_cache(game_specs)
+            if cached:
+                results_from_cache[game_id]=cached
+                continue
+            json_data_notcached[game_id]=game_specs
             #event_json[game_id] = []
             home=game_specs["koti"]
             visitor=game_specs["vieras"]
@@ -280,7 +317,7 @@ def req_batch():
                     print(input_,file=buff)
                     line_ids.append(game_id)
 
-
+        selection = json.loads(event_selector(json_data_notcached))
         buff.seek(0)
         generated=run_gen(buff)
         result={}
@@ -302,6 +339,11 @@ def req_batch():
             meta['teksti'] = detokenized
             meta['versio'] = gen_i % GENERATIONS_PER_EVENT
             result.setdefault(game_id,[]).append(meta)
+
+        save_to_cache(json_data_notcached,result) #save the results to cache
+        #...and merge in the ones we didn't generate
+        for game_id,text_data in results_from_cache.items():
+            result[game_id]=text_data
         return json.dumps(result, indent=4)+"\n",200,{'Content-Type': 'application/json; charset=utf-8'}
     except:
         return traceback.format_exc(),400
