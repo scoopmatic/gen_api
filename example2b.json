@@ -1,0 +1,174 @@
+{
+  "peli_0": {
+    "maalit": [
+      {
+	"id": 1,
+        "sy\u00f6tt\u00e4j\u00e4t": [
+          "JANI TUPPURAINEN",
+          "MIKKO KALTEVA"
+        ],
+        "tekij\u00e4": "JERRY TURKULAINEN",
+        "joukkue": "vieras",
+        "scorerJersey": 32,
+        "erityistiedot": [
+          ""
+        ],
+        "aika": "20:29"
+      },
+      {
+	"id": 2,
+        "sy\u00f6tt\u00e4j\u00e4t": [],
+        "tekij\u00e4": "HEIKKI LIEDES",
+        "joukkue": "koti",
+        "scorerJersey": 9,
+        "erityistiedot": [
+          ""
+        ],
+        "aika": "23:35"
+      },
+      {
+	"id": 3,
+        "sy\u00f6tt\u00e4j\u00e4t": [
+          "TARMO REUNANEN",
+          "HEIKKI LIEDES"
+        ],
+        "tekij\u00e4": "JANNE KER\u00c4NEN",
+        "joukkue": "koti",
+        "scorerJersey": 19,
+        "erityistiedot": [
+          "YV"
+        ],
+        "aika": "29:3"
+      },
+      {
+	"id": 4,
+        "sy\u00f6tt\u00e4j\u00e4t": [
+          "ARTTU ILOM\u00c4KI",
+          "VILLE HEINOLA"
+        ],
+        "tekij\u00e4": "TARMO REUNANEN",
+        "joukkue": "koti",
+        "scorerJersey": 11,
+        "erityistiedot": [
+          "YV"
+        ],
+        "aika": "52:23"
+      },
+      {
+	"id": 5,
+        "sy\u00f6tt\u00e4j\u00e4t": [
+          "ARTTU ILOM\u00c4KI",
+          "JAKUB KREJCIK"
+        ],
+        "tekij\u00e4": "JANNE KER\u00c4NEN",
+        "joukkue": "koti",
+        "scorerJersey": 19,
+        "erityistiedot": [
+          "TM"
+        ],
+        "aika": "58:2"
+      },
+      {
+	"id": 6,
+        "sy\u00f6tt\u00e4j\u00e4t": [],
+        "tekij\u00e4": "ARTTU ILOM\u00c4KI",
+        "joukkue": "koti",
+        "scorerJersey": 75,
+        "erityistiedot": [
+          "TM"
+        ],
+        "aika": "59:58"
+      }
+    ],
+    "tila": 1,
+    "gameBeginTime": "17:00:00",
+    "er\u00e4t": [
+      [
+        0,
+        0
+      ],
+      [
+        2,
+        1
+      ],
+      [
+        3,
+        0
+      ]
+    ],
+    "vieras": "JYP",
+    "j\u00e4\u00e4hyt": [
+      {
+	"id": 1,
+        "joukkue": "vieras",
+        "syy": "Korkea maila",
+        "aika": "6:41",
+        "minuutit": 2,
+        "pelaaja": "MARKUS JOKINEN"
+      },
+      {
+	"id": 2,
+        "joukkue": "vieras",
+        "syy": "Koukkaaminen",
+        "aika": "29:53",
+        "minuutit": 2,
+        "pelaaja": "JUHA-PEKKA HYT\u00d6NEN"
+      },
+      {
+	"id": 3,
+        "joukkue": "vieras",
+        "syy": "Est\u00e4minen",
+        "aika": "33:15",
+        "minuutit": 2,
+        "pelaaja": "MIIKA LAHTI"
+      },
+      {
+	"id": 4,
+        "joukkue": "vieras",
+        "syy": "Kiinnipit\u00e4minen",
+        "aika": "43:0",
+        "minuutit": 2,
+        "pelaaja": "ANTON STR\u00c5KA"
+      },
+      {
+	"id": 5,
+        "joukkue": "vieras",
+        "syy": "Korkea maila",
+        "aika": "51:22",
+        "minuutit": 2,
+        "pelaaja": "ROBERT ROOBA"
+      },
+      {
+	"id": 6,
+        "joukkue": "koti",
+        "syy": "Est\u00e4minen",
+        "aika": "3:40",
+        "minuutit": 2,
+        "pelaaja": "TAPIO LAAKSO"
+      },
+      {
+	"id": 7,
+        "joukkue": "koti",
+        "syy": "Korkea maila",
+        "aika": "24:48",
+        "minuutit": 2,
+        "pelaaja": "TONI KOIVISTO"
+      },
+      {
+	"id": 8,
+        "joukkue": "koti",
+        "syy": "Est\u00e4minen",
+        "aika": "37:7",
+        "minuutit": 2,
+        "pelaaja": "MANUEL GANAHL"
+      }
+    ],
+    "lopputulos": [
+      5,
+      1
+    ],
+    "gameBeginDate": "2019-03-16",
+    "erityistiedot": [],
+    "koti": "Lukko"
+  }
+}
