@@ -1,0 +1,3 @@
+[submodule "event2text-attnctrl"]
+	path = event2text-attnctrl
+	url = https://github.com/sronnqvist/event2text-attnctrl.git
