@@ -317,9 +317,14 @@ def req_batch():
                     print(input_,file=buff)
                     line_ids.append(game_id)
 
-        selection = json.loads(event_selector(json_data_notcached))
         buff.seek(0)
-        generated=run_gen(buff)
+        if json_data_notcached:
+            generated=run_gen(buff)
+            selection = json.loads(event_selector(json_data_notcached))
+        else:
+            generated=[]
+            selection={}
+
         result={}
         GENERATIONS_PER_EVENT = 3
 
