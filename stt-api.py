@@ -29,7 +29,7 @@ def event_selector(json_data):
     return json_text
 
 
-def run_gen(lines):
+def run_gen(lines, version="1"):
     """This should return the lines translated"""
     #...do the gen here
     thisdir=os.path.dirname(os.path.realpath(__file__))
@@ -39,7 +39,7 @@ def run_gen(lines):
         for line in lines:
             print(line.strip(), file=f)
 
-    subprocess.run("bash generate.sh {this} {fname}".format(this=thisdir, fname=filename), shell=True)
+    subprocess.run("bash generate_v{version}.sh {this} {fname}".format(version=version, this=thisdir, fname=filename), shell=True)
 
     gen_lines=[]
     with open("tmp_files/{fname}.output".format(fname=filename), "rt", encoding="utf-8") as f:
@@ -241,24 +241,24 @@ def normalize_input(json):
     return json
 
 
-def cached_name(game_specs):
+def cached_name(game_specs, cache_name='cache'):
     game_specs=json.dumps(game_specs,sort_keys=True,ensure_ascii=True)
     hashed=hashlib.sha384(game_specs.encode("ASCII")).hexdigest()+".json"
-    return os.path.join("cache",hashed)
+    return os.path.join(cache_name,hashed)
 
 
-def save_to_cache(all_games_in,all_games_out):
+def save_to_cache(all_games_in,all_games_out,cache_name='cache'):
     for game_id,text_data in all_games_out.items():
         game_specs=all_games_in[game_id]
         try:
-            with open(cached_name(game_specs),"wt") as f:
+            with open(cached_name(game_specs,cache_name=cache_name),"wt") as f:
                 json.dump(text_data,f)
         except:
             traceback.print_exc()
             continue #I guess no can do
 
-def load_from_cache(game_specs):
-    fname=cached_name(game_specs)
+def load_from_cache(game_specs, cache_name='cache'):
+    fname=cached_name(game_specs, cache_name=cache_name)
     if os.path.exists(fname): #in cache
         with open(fname,"rt") as f:
             try:
@@ -286,7 +286,7 @@ def req_batch():
         line_ids=[]
         event_json = []
 
-        results_from_cache={} 
+        results_from_cache={}
         for game_id,game_specs in json_data.items():
             cached=load_from_cache(game_specs)
             if cached:
@@ -346,6 +346,95 @@ def req_batch():
             result.setdefault(game_id,[]).append(meta)
 
         save_to_cache(json_data_notcached,result) #save the results to cache
+        #...and merge in the ones we didn't generate
+        for game_id,text_data in results_from_cache.items():
+            result[game_id]=text_data
+        return json.dumps(result, indent=4)+"\n",200,{'Content-Type': 'application/json; charset=utf-8'}
+    except:
+        return traceback.format_exc(),400
+
+
+@app.route("/api-v2", methods=["POST"])
+def req_batch():
+    json_data=request.json
+    json_data = normalize_input(json_data)
+
+    json_data_notcached={} #this will be the data of stuff that needs to be generated
+    try:
+
+
+        #print(json_data)
+
+        assert isinstance(json_data,dict)
+        buff=io.StringIO()
+        line_ids=[]
+        event_json = []
+
+        results_from_cache={}
+        for game_id,game_specs in json_data.items():
+            cached=load_from_cache(game_specs, cache_name='cache_v2')
+            if cached:
+                results_from_cache[game_id]=cached
+                continue
+            json_data_notcached[game_id]=game_specs
+            #event_json[game_id] = []
+            home=game_specs["koti"]
+            visitor=game_specs["vieras"]
+            total_score=game_specs["lopputulos"]
+            formatted_input=format_results_line(game_specs)
+            event_json.append({'tyyppi': 'lopputulos'})
+            for input_ in formatted_input:
+                print(input_,file=buff)
+                line_ids.append(game_id)
+            current_score=[0,0]
+            for goal_specs in game_specs.get("maalit",[]):
+                formatted_input, current_score = format_goal_line(home, visitor, total_score, current_score, goal_specs)
+                event_json.append({'tyyppi': 'maali', 'id': goal_specs['id']})
+                for input_ in formatted_input:
+                    print(input_,file=buff)
+                    line_ids.append(game_id)
+
+            for penalty_specs in game_specs.get("jäähyt",[]):
+                formatted_input = format_penalty_line(home, visitor, penalty_specs)
+                event_json.append({'tyyppi': 'jäähy', 'id': penalty_specs['id']})
+                for input_ in formatted_input:
+                    print(input_,file=buff)
+                    line_ids.append(game_id)
+
+        buff.seek(0)
+        if json_data_notcached:
+            generated=run_gen(buff, version="2")
+            selection = json.loads(event_selector(json_data_notcached))
+        else:
+            generated=[]
+            selection={}
+
+        result={}
+        #GENERATIONS_PER_EVENT = 3
+
+        last_event = None
+        for gen_i, (game_id, line) in enumerate(zip(line_ids,generated)):
+            event_i = line.split('\t')[0]
+            if last_event is None or last_event != event_i:
+                event_start = gen_i
+                last_event = event_i
+            detokenized = detokenize(line[line.index('\t'):].strip())
+            #event_i = gen_i//GENERATIONS_PER_EVENT
+            meta = copy.copy(event_json[event_i])
+
+            if 'id' not in meta:
+                meta['id'] = None
+                index = 0
+            else:
+                input_ids = sorted([ev['id'] for i,ev in enumerate(event_json) if ev['tyyppi'] == meta['tyyppi'] and line_ids[i*GENERATIONS_PER_EVENT] == game_id])
+                index = input_ids.index(int(meta['id']))
+
+            meta['valittu'] = sorted([(int(x['idx'][1:]), x['sel']) for x in selection[game_id] if x['type'].lower() == meta['tyyppi']])[index][1]
+            meta['teksti'] = detokenized
+            meta['versio'] = gen_i-event_start # Generation candidate ranking
+            result.setdefault(game_id,[]).append(meta)
+
+        save_to_cache(json_data_notcached,result, cache_name='cache_v2') #save the results to cache
         #...and merge in the ones we didn't generate
         for game_id,text_data in results_from_cache.items():
             result[game_id]=text_data
