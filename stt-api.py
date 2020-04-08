@@ -9,6 +9,8 @@ import subprocess
 import re
 import copy
 import hashlib
+import functools
+
 
 app=Flask(__name__)
 
@@ -355,7 +357,7 @@ def req_batch():
 
 
 @app.route("/api-v2", methods=["POST"])
-def req_batch():
+def req_batch_v2():
     json_data=request.json
     json_data = normalize_input(json_data)
 
@@ -386,6 +388,7 @@ def req_batch():
             for input_ in formatted_input:
                 print(input_,file=buff)
                 line_ids.append(game_id)
+                break # Use only one version of event
             current_score=[0,0]
             for goal_specs in game_specs.get("maalit",[]):
                 formatted_input, current_score = format_goal_line(home, visitor, total_score, current_score, goal_specs)
@@ -393,6 +396,7 @@ def req_batch():
                 for input_ in formatted_input:
                     print(input_,file=buff)
                     line_ids.append(game_id)
+                    break # Use only one version of event
 
             for penalty_specs in game_specs.get("jäähyt",[]):
                 formatted_input = format_penalty_line(home, visitor, penalty_specs)
@@ -400,6 +404,7 @@ def req_batch():
                 for input_ in formatted_input:
                     print(input_,file=buff)
                     line_ids.append(game_id)
+                    break # Use only one version of event
 
         buff.seek(0)
         if json_data_notcached:
@@ -410,28 +415,39 @@ def req_batch():
             selection={}
 
         result={}
-        #GENERATIONS_PER_EVENT = 3
+        last_event = None
+        for i,line in enumerate(generated):
+            event_i = line.split('\t')[0]
+            if last_event is None:
+                last_event = event_i
+            elif last_event != event_i:
+                last_event = event_i
+                GENERATIONS_PER_EVENT = i # Calculate this
+                break
+        #assert GENERATIONS_PER_EVENT == 6
 
         last_event = None
+        if generated: # != cached
+            line_ids = functools.reduce(lambda a,b: a+b,[[i]*GENERATIONS_PER_EVENT for i in line_ids]) # Expand for each event by number of generation candidates
         for gen_i, (game_id, line) in enumerate(zip(line_ids,generated)):
-            event_i = line.split('\t')[0]
-            if last_event is None or last_event != event_i:
-                event_start = gen_i
-                last_event = event_i
             detokenized = detokenize(line[line.index('\t'):].strip())
-            #event_i = gen_i//GENERATIONS_PER_EVENT
+            event_i = gen_i//GENERATIONS_PER_EVENT
             meta = copy.copy(event_json[event_i])
 
             if 'id' not in meta:
                 meta['id'] = None
                 index = 0
             else:
-                input_ids = sorted([ev['id'] for i,ev in enumerate(event_json) if ev['tyyppi'] == meta['tyyppi'] and line_ids[i*GENERATIONS_PER_EVENT] == game_id])
-                index = input_ids.index(int(meta['id']))
+                index = meta['id']-1
 
-            meta['valittu'] = sorted([(int(x['idx'][1:]), x['sel']) for x in selection[game_id] if x['type'].lower() == meta['tyyppi']])[index][1]
+            # Look up selection flag for event
+            # In API format, ID runs separately for each event type (except for 'lopputulos' with id=null)
+            idx2int = (lambda x: int(x[1:]))
+            event_selections = sorted([(idx2int(ev['idx']), ev['sel']) for ev in selection[game_id] if ev['type'].lower() == meta['tyyppi']])
+            _, sel = event_selections[index]
+            meta['valittu'] = sel
             meta['teksti'] = detokenized
-            meta['versio'] = gen_i-event_start # Generation candidate ranking
+            meta['versio'] = gen_i % GENERATIONS_PER_EVENT #gen_i-event_start # Generation candidate ranking
             result.setdefault(game_id,[]).append(meta)
 
         save_to_cache(json_data_notcached,result, cache_name='cache_v2') #save the results to cache
