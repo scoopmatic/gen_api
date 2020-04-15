@@ -48,6 +48,9 @@ def run_gen(lines, version="1"):
         for line in f:
             gen_lines.append(line.strip())
 
+    os.remove("tmp_files/{fname}.output".format(fname=filename))
+    os.remove("tmp_files/{fname}.input".format(fname=filename))
+    os.remove("tmp_files/{fname}.input.pcs".format(fname=filename))
     #return a string with the result
     return gen_lines
 
