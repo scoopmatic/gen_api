@@ -26,6 +26,7 @@ def event_selector(json_data):
 
     completed_process = subprocess.run("cat tmp_files/{json_file}.json | bash selector_pipeline.sh".format(json_file=filename), shell=True, stdout=subprocess.PIPE)
 
+    os.remove("tmp_files/{fname}.json".format(fname=filename))
     json_text = completed_process.stdout.decode("utf-8")
     #print("my out:", json_text)
     return json_text
